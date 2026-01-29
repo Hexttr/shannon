@@ -148,8 +148,8 @@ def main():
                 print("Ошибка: директория dist не создана", file=sys.stderr)
                 sys.exit(1)
         
-        # 6. Проверяем наличие nginx
-        print("\n6. Проверяю наличие nginx...")
+        # 7. Проверяем наличие nginx
+        print("\n7. Проверяю наличие nginx...")
         success, _ = execute_ssh_command(
             ssh,
             "which nginx && nginx -v",
@@ -162,9 +162,9 @@ def main():
                 print("Ошибка при установке nginx", file=sys.stderr)
                 sys.exit(1)
         
-        # 7. Настраиваем nginx
-        print("\n7. Настраиваю nginx...")
-        dist_dir = f"{frontend_dir}/dist"
+        # 8. Настраиваем nginx
+        print("\n8. Настраиваю nginx...")
+        web_dir = "/var/www/shannon"
         nginx_config = f"""server {{
     listen 80;
     server_name 72.56.79.153;
@@ -237,7 +237,7 @@ def main():
         print(f"\nFrontend доступен по адресу: http://{SSH_HOST}/")
         print(f"Backend API: http://{SSH_HOST}/api/")
         print(f"WebSocket: ws://{SSH_HOST}/socket.io/")
-        print(f"\nДиректория сборки: {dist_dir}")
+        print(f"\nДиректория frontend: {web_dir}")
         print("\nПроверьте работу приложения в браузере!")
         
     except Exception as e:
