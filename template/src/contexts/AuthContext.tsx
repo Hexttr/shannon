@@ -18,22 +18,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Проверяем токен при загрузке
+    window.__DEBUG__?.log('[AuthContext] Проверка токена при загрузке...');
     const token = localStorage.getItem('access_token');
     if (token) {
+      window.__DEBUG__?.log('[AuthContext] Токен найден, проверяем авторизацию...');
       checkAuth();
     } else {
+      window.__DEBUG__?.log('[AuthContext] Токен не найден, устанавливаем isLoading=false');
       setIsLoading(false);
     }
   }, []);
 
   const checkAuth = async () => {
     try {
+      window.__DEBUG__?.log('[AuthContext] Выполняем checkAuth...');
       const response = await authApi.getMe();
+      window.__DEBUG__?.log('[AuthContext] getMe успешно:', response.data);
       setUser(response.data);
-    } catch (error) {
+    } catch (error: any) {
+      window.__DEBUG__?.log('[AuthContext] Ошибка checkAuth:', error?.message || error);
       localStorage.removeItem('access_token');
       setUser(null);
     } finally {
+      window.__DEBUG__?.log('[AuthContext] Устанавливаем isLoading=false');
       setIsLoading(false);
     }
   };

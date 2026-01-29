@@ -15,7 +15,10 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
+  window.__DEBUG__?.log('[ProtectedRoute] isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
+
   if (isLoading) {
+    window.__DEBUG__?.log('[ProtectedRoute] Показываем загрузку...');
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-white">Загрузка...</div>
@@ -24,15 +27,20 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
   }
 
   if (!isAuthenticated) {
+    window.__DEBUG__?.log('[ProtectedRoute] Не авторизован, редирект на /');
     return <Navigate to="/" replace state={{ from: location }} />;
   }
 
+  window.__DEBUG__?.log('[ProtectedRoute] Авторизован, показываем children');
   return children;
 }
 
 function AppRoutes() {
-  // Определяем базовый путь: /app в production, / в development
-  const basename = window.location.hostname === 'localhost' ? '/' : '/app';
+  // Базовый путь всегда / (изменено с /app на /)
+  const basename = '/';
+  
+  window.__DEBUG__?.log('[App.tsx] basename:', basename);
+  window.__DEBUG__?.log('[App.tsx] location:', window.location.href);
   
   return (
     <BrowserRouter basename={basename}>
@@ -60,6 +68,8 @@ function AppRoutes() {
 }
 
 function App() {
+  window.__DEBUG__?.log('[App.tsx] Рендеринг App компонента');
+  
   return (
     <AuthProvider>
       <AppRoutes />

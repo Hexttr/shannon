@@ -14,9 +14,15 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    window.__DEBUG__?.log('[Login] Компонент Login загружен');
+    window.__DEBUG__?.log('[Login] isAuthenticated:', isAuthenticated);
+  }, []);
+
   // Если уже авторизован - редирект на главную
   useEffect(() => {
     if (isAuthenticated) {
+      window.__DEBUG__?.log('[Login] Уже авторизован, редирект на /home');
       const from = (location.state as any)?.from?.pathname || '/home';
       navigate(from, { replace: true });
     }

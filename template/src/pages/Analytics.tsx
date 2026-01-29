@@ -31,11 +31,11 @@ export default function Analytics() {
   });
 
   // Фильтруем пентесты по выбранному сервису
-  const selectedService = services.find((s) => s.id === selectedServiceId);
+  const selectedService = services.find((s) => s.id.toString() === selectedServiceId);
   const servicePentests = useMemo(() => {
     if (!selectedService || !allPentests.length) return [];
     return allPentests
-      .filter((p) => (p.targetUrl || p.target_url) === selectedService.url)
+      .filter((p) => (p.target_url || p.targetUrl) === selectedService.url)
       .filter((p) => p.status === 'completed') // Только завершенные
       .sort((a, b) => {
         const dateA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
