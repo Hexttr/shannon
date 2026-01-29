@@ -40,7 +40,8 @@ export default function Services() {
     services.forEach((service) => {
       const servicePentests = pentests.filter(
         (p) => (p.targetUrl || p.target_url) === service.url
-      );      const lastCompleted = [...servicePentests]
+      );
+      const lastCompleted = [...servicePentests]
         .filter((p) => p.status === 'completed')
         .sort((a, b) => {
           const dateA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
