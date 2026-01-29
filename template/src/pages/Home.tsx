@@ -178,7 +178,11 @@ export default function Home() {
   }, [filteredPentests]);
 
   // Данные для круговой диаграммы уязвимостей
-  const vulnerabilitiesPieData = [    { name: 'Критичные', value: metrics.critical, color: '#dc2626' },    { name: 'Высокие', value: metrics.high, color: '#ea580c' },    { name: 'Средние', value: metrics.medium, color: '#f59e0b' },    { name: 'Низкие', value: metrics.low, color: '#eab308' },
+  const vulnerabilitiesPieData = [
+    { name: 'Критичные', value: metrics.critical, color: '#dc2626' },
+    { name: 'Высокие', value: metrics.high, color: '#ea580c' },
+    { name: 'Средние', value: metrics.medium, color: '#f59e0b' },
+    { name: 'Низкие', value: metrics.low, color: '#eab308' },
   ];
 
   // Последние пентесты (топ 5)
