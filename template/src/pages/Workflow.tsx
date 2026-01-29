@@ -123,8 +123,11 @@ export default function Workflow() {
     refetchInterval: 3000, // Обновление каждые 3 секунды
   });
 
-  // Находим активный пентест (running или последний)
-  const activePentest = pentests.find((p) => p.status === 'running') || pentests[0];
+  // Находим активный пентест (running или последний запущенный)
+  const activePentest = 
+    pentests.find((p) => p.status === 'running') || 
+    pentests.find((p) => p.status === 'completed' && p.startedAt) ||
+    pentests[0];
 
   if (isLoading) {
     return (
