@@ -162,7 +162,22 @@ export default function Home() {
   }, [services, filteredPentests, allVulnerabilitiesQueries]);
 
   // Security Score (0-100)
-  const securityScore = useMemo(() => {    if (metrics.totalVulnerabilities === 0) return 100;    const criticalWeight = metrics.critical * 10;    const highWeight = metrics.high * 5;    const mediumWeight = metrics.medium * 2;    const lowWeight = metrics.low * 1;    const totalWeight = criticalWeight + highWeight + mediumWeight + lowWeight;    const score = Math.max(0, 100 - Math.min(100, totalWeight / (metrics.totalPentests || 1)));    return Math.round(score);  }, [metrics]);  // Данные для графика пентестов по датам  const pentestsChartData = useMemo(() => {    const last30Days = Array.from({ length: 30 }, (_, i) => {      const date = new Date();      date.setDate(date.getDate() - (29 - i));      return {        date: date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }),        completed: 0,        failed: 0,        running: 0,      };    });    filteredPentests.forEach((pentest) => {
+  const securityScore = useMemo(() => {
+    if (metrics.totalVulnerabilities === 0) return 100;
+    const criticalWeight = metrics.critical * 10;
+    const highWeight = metrics.high * 5;
+    const mediumWeight = metrics.medium * 2;
+    const lowWeight = metrics.low * 1;
+    const totalWeight = criticalWeight + highWeight + mediumWeight + lowWeight;
+    const score = Math.max(
+      0,
+      100 - Math.min(100, totalWeight / (metrics.totalPentests || 1))
+    );
+    return Math.round(score);
+  }, [metrics]);
+
+  // Данные для графика пентестов по датам
+  const pentestsChartData = useMemo(() => {    const last30Days = Array.from({ length: 30 }, (_, i) => {      const date = new Date();      date.setDate(date.getDate() - (29 - i));      return {        date: date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' }),        completed: 0,        failed: 0,        running: 0,      };    });    filteredPentests.forEach((pentest) => {
       const pentestDate = new Date(pentest.createdAt || pentest.created_at);
       const daysAgo = Math.floor(
         (Date.now() - pentestDate.getTime()) / (1000 * 60 * 60 * 24)
