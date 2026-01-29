@@ -167,9 +167,50 @@ def main():
         web_dir = "/var/www/shannon"
         nginx_config = f"""server {{
     listen 80;
+    listen [::]:80;
     server_name 72.56.79.153;
     
-    root {dist_dir};
+    root {web_dir};
+    index index.html;
+    
+    # Раздача статических файлов
+    location / {{
+        try_files $uri $uri/ /index.html;
+    }}
+    
+    # Кэширование статических ресурсов
+    location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {{
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+    }}
+    
+    # Проксирование API запросов к backend
+    location /api {{
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }}
+    
+    # Проксирование WebSocket для Socket.IO
+    location /socket.io {{
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }}
+}}
+"""
     index index.html;
     
     location / {{
@@ -182,7 +223,7 @@ def main():
     }}
     
     location /api {{
-        proxy_pass http://localhost:8000;
+        proxy_pass http://127.0.0.1:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -194,7 +235,7 @@ def main():
     }}
     
     location /socket.io {{
-        proxy_pass http://localhost:8000;
+        proxy_pass http://127.0.0.1:8000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
