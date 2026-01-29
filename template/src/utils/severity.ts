@@ -51,3 +51,4 @@ export function getSeverityLabel(severity: Severity): string {
   return labels[severity] || severity;
 }
 
+

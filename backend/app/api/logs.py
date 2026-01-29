@@ -27,3 +27,4 @@ def get_logs(
     
     return db.query(Log).filter(Log.pentest_id == pentest_id).order_by(Log.timestamp).all()
 
+

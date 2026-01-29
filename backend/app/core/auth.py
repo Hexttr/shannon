@@ -73,3 +73,4 @@ def get_user_by_username(db: Session, username: str) -> Optional[User]:
     """Получение пользователя по username"""
     return db.query(User).filter(User.username == username).first()
 
+

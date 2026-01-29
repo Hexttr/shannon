@@ -161,3 +161,4 @@ class ClaudeClient:
             logger.error(f"Ошибка при генерации отчета: {e}")
             return f"# Отчет о пентесте\n\nОшибка генерации отчета: {str(e)}"
 
+

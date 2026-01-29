@@ -78,3 +78,4 @@ async def emit_pentest_vulnerability(pentest_id: int, vulnerability_data: dict):
     """Отправка новой уязвимости"""
     await sio.emit(f'pentest:{pentest_id}:vulnerability', vulnerability_data, room=f"pentest_{pentest_id}")
 
+

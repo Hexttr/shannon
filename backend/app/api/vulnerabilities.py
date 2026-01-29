@@ -27,3 +27,4 @@ def get_vulnerabilities(
     
     return db.query(Vulnerability).filter(Vulnerability.pentest_id == pentest_id).all()
 
+

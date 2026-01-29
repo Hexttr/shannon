@@ -24,3 +24,4 @@ class Log(Base):
     # Relationships
     pentest = relationship("Pentest", back_populates="logs")
 
+

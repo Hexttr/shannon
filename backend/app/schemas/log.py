@@ -13,3 +13,4 @@ class LogResponse(BaseModel):
     class Config:
         from_attributes = True
 
+

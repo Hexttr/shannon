@@ -49,7 +49,7 @@ export interface Pentest {
 
 export interface CreatePentestRequest {
   name: string;
-  target_url: string;
+  target_url?: string;
   config?: Record<string, any>;
 }
 

@@ -1,13 +1,16 @@
 import api from './api';
 import { Service, CreateServiceRequest, UpdateServiceRequest } from '../types';
+import { normalizeService } from '../utils/normalize';
 
 export const serviceApi = {
   getAll: async (): Promise<{ data: Service[] }> => {
-    return api.get<Service[]>('/api/services');
+    const response = await api.get<Service[]>('/api/services');
+    return { data: response.data.map(normalizeService) };
   },
 
   getById: async (id: number): Promise<{ data: Service }> => {
-    return api.get<Service>(`/api/services/${id}`);
+    const response = await api.get<Service>(`/api/services/${id}`);
+    return { data: normalizeService(response.data) };
   },
 
   create: async (data: CreateServiceRequest): Promise<{ data: Service }> => {
@@ -22,4 +25,5 @@ export const serviceApi = {
     return api.delete(`/api/services/${id}`);
   },
 };
+
 

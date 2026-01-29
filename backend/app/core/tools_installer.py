@@ -84,3 +84,4 @@ def check_all_tools(ssh_client: SSHClient) -> dict:
         results[tool_name] = ssh_client.check_tool_installed(tool_name)
     return results
 
+

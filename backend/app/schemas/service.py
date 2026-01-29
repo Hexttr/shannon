@@ -25,3 +25,4 @@ class ServiceResponse(ServiceBase):
     class Config:
         from_attributes = True
 
+

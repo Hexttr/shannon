@@ -50,3 +50,4 @@ def init_db():
     finally:
         db.close()
 
+
