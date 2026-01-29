@@ -58,7 +58,43 @@ export default function Home() {
   const pentestsToLoad = completedPentests.slice(0, 5);
 
   // Загружаем уязвимости для каждого пентеста отдельно
-  const vulnerabilitiesData1 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[0]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[0]!.id).then(res => res.data),    enabled: !!pentestsToLoad[0]?.id,    staleTime: 5 * 60 * 1000,  });  const vulnerabilitiesData2 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[1]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[1]!.id).then(res => res.data),    enabled: !!pentestsToLoad[1]?.id,    staleTime: 5 * 60 * 1000,  });  const vulnerabilitiesData3 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[2]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[2]!.id).then(res => res.data),    enabled: !!pentestsToLoad[2]?.id,    staleTime: 5 * 60 * 1000,  });  const vulnerabilitiesData4 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[3]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[3]!.id).then(res => res.data),    enabled: !!pentestsToLoad[3]?.id,    staleTime: 5 * 60 * 1000,  });  const vulnerabilitiesData5 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[4]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[4]!.id).then(res => res.data),    enabled: !!pentestsToLoad[4]?.id,
+  const vulnerabilitiesData1 = useQuery({
+    queryKey: ['vulnerabilities', pentestsToLoad[0]?.id],
+    queryFn: () =>
+      pentestApi.getVulnerabilities(pentestsToLoad[0]!.id).then((res) => res.data),
+    enabled: !!pentestsToLoad[0]?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const vulnerabilitiesData2 = useQuery({
+    queryKey: ['vulnerabilities', pentestsToLoad[1]?.id],
+    queryFn: () =>
+      pentestApi.getVulnerabilities(pentestsToLoad[1]!.id).then((res) => res.data),
+    enabled: !!pentestsToLoad[1]?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const vulnerabilitiesData3 = useQuery({
+    queryKey: ['vulnerabilities', pentestsToLoad[2]?.id],
+    queryFn: () =>
+      pentestApi.getVulnerabilities(pentestsToLoad[2]!.id).then((res) => res.data),
+    enabled: !!pentestsToLoad[2]?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const vulnerabilitiesData4 = useQuery({
+    queryKey: ['vulnerabilities', pentestsToLoad[3]?.id],
+    queryFn: () =>
+      pentestApi.getVulnerabilities(pentestsToLoad[3]!.id).then((res) => res.data),
+    enabled: !!pentestsToLoad[3]?.id,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const vulnerabilitiesData5 = useQuery({
+    queryKey: ['vulnerabilities', pentestsToLoad[4]?.id],
+    queryFn: () =>
+      pentestApi.getVulnerabilities(pentestsToLoad[4]!.id).then((res) => res.data),
+    enabled: !!pentestsToLoad[4]?.id,
     staleTime: 5 * 60 * 1000,
   });
 
