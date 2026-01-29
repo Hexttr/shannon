@@ -39,12 +39,15 @@ export interface Pentest {
   target_url: string;
   status: PentestStatus;
   config?: Record<string, any>;
+  current_step?: string;
+  step_progress?: Record<string, string>;
   created_at: string;
   started_at?: string;
   completed_at?: string;
   createdAt?: string; // Для совместимости
   startedAt?: string; // Для совместимости
   completedAt?: string; // Для совместимости
+  targetUrl?: string; // Для совместимости
 }
 
 export interface CreatePentestRequest {

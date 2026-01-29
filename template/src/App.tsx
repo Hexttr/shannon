@@ -5,6 +5,7 @@ import Login from './pages/Login';
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Pentests from './pages/Pentests';
+import Workflow from './pages/Workflow';
 import Reports from './pages/Reports';
 import Analytics from './pages/Analytics';
 import About from './pages/About';
@@ -57,6 +58,7 @@ function AppRoutes() {
           <Route index element={<Home />} />
           <Route path="services" element={<Services />} />
           <Route path="pentests" element={<Pentests />} />
+          <Route path="workflow" element={<Workflow />} />
           <Route path="reports" element={<Reports />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="about" element={<About />} />
