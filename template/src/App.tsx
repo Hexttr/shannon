@@ -28,7 +28,16 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
   }
 
   return children;
-}function AppRoutes() {  // Определяем базовый путь: /app в production, / в development  const basename = window.location.hostname === 'localhost' ? '/' : '/app';    return (    <BrowserRouter basename={basename}>      <Routes>        <Route path="/" element={<Login />} />
+}
+
+function AppRoutes() {
+  // Определяем базовый путь: /app в production, / в development
+  const basename = window.location.hostname === 'localhost' ? '/' : '/app';
+  
+  return (
+    <BrowserRouter basename={basename}>
+      <Routes>
+        <Route path="/" element={<Login />} />
         <Route
           path="/home"
           element={
@@ -36,4 +45,26 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
               <Layout />
             </ProtectedRoute>
           }
-        >          <Route index element={<Home />} />          <Route path="services" element={<Services />} />          <Route path="pentests" element={<Pentests />} />          <Route path="reports" element={<Reports />} />          <Route path="analytics" element={<Analytics />} />          <Route path="about" element={<About />} />        </Route>        <Route path="*" element={<Navigate to="/" replace />} />      </Routes>    </BrowserRouter>  );}function App() {  return (    <AuthProvider>      <AppRoutes />    </AuthProvider>  );}export default App;
+        >
+          <Route index element={<Home />} />
+          <Route path="services" element={<Services />} />
+          <Route path="pentests" element={<Pentests />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="analytics" element={<Analytics />} />
+          <Route path="about" element={<About />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
+}
+
+export default App;
