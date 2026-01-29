@@ -1,0 +1,261 @@
+#!/usr/bin/env python3
+"""
+Скрипт для развертывания frontend на сервере Ubuntu
+"""
+
+import paramiko
+import sys
+import os
+
+# Параметры подключения
+SSH_HOST = "72.56.79.153"
+SSH_USER = "root"
+SSH_PASSWORD = "m8J@2_6whwza6U"
+PROJECT_DIR = "/root/shannon"
+
+def execute_ssh_command(ssh, command, description):
+    """Выполняет команду через SSH и выводит результат"""
+    print(f"\n{'='*60}")
+    print(f"{description}")
+    print(f"{'='*60}")
+    print(f"Выполняю: {command}")
+    
+    stdin, stdout, stderr = ssh.exec_command(command)
+    exit_status = stdout.channel.recv_exit_status()
+    
+    output = stdout.read().decode('utf-8', errors='replace')
+    errors = stderr.read().decode('utf-8', errors='replace')
+    
+    if output:
+        try:
+            print(output)
+        except UnicodeEncodeError:
+            # Если не удается вывести, заменяем проблемные символы
+            print(output.encode('ascii', 'replace').decode('ascii'))
+    if errors:
+        try:
+            print(f"Ошибки: {errors}", file=sys.stderr)
+        except UnicodeEncodeError:
+            print(f"Ошибки: {errors.encode('ascii', 'replace').decode('ascii')}", file=sys.stderr)
+    
+    if exit_status != 0:
+        print(f"Команда завершилась с кодом: {exit_status}", file=sys.stderr)
+        return False, output
+    
+    return True, output
+
+def main():
+    print("="*60)
+    print("РАЗВЕРТЫВАНИЕ FRONTEND НА СЕРВЕРЕ UBUNTU")
+    print("="*60)
+    
+    # Подключение к серверу
+    print(f"\nПодключаюсь к серверу {SSH_HOST}...")
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    
+    try:
+        ssh.connect(SSH_HOST, username=SSH_USER, password=SSH_PASSWORD, timeout=30)
+        print("Подключение установлено!")
+    except Exception as e:
+        print(f"Ошибка подключения: {e}", file=sys.stderr)
+        sys.exit(1)
+    
+    try:
+        # 1. Проверяем наличие Node.js и npm
+        print("\n1. Проверяю наличие Node.js и npm...")
+        success, _ = execute_ssh_command(
+            ssh,
+            "which node && node --version && which npm && npm --version",
+            "Проверка Node.js и npm"
+        )
+        
+        if not success:
+            print("\nNode.js не найден. Устанавливаю Node.js 20.x...")
+            commands = [
+                "curl -fsSL https://deb.nodesource.com/setup_20.x | bash -",
+                "apt-get install -y nodejs",
+            ]
+            for cmd in commands:
+                execute_ssh_command(ssh, cmd, f"Установка: {cmd}")
+            execute_ssh_command(ssh, "node --version && npm --version", "Проверка установки")
+        
+        # 2. Ищем или создаем директорию frontend
+        print("\n2. Ищу директорию frontend...")
+        # Ищем package.json, исключая node_modules
+        success, output = execute_ssh_command(
+            ssh,
+            f"find {PROJECT_DIR} -name 'package.json' -type f -not -path '*/node_modules/*' 2>/dev/null | grep -v node_modules | head -1",
+            "Поиск package.json"
+        )
+        
+        frontend_dir = None
+        if output.strip() and 'node_modules' not in output:
+            frontend_dir = os.path.dirname(output.strip())
+            print(f"Найдена директория frontend: {frontend_dir}")
+        else:
+            # Проверяем стандартную директорию
+            frontend_dir = f"{PROJECT_DIR}/template"
+            success, output = execute_ssh_command(
+                ssh,
+                f"test -d {frontend_dir} && echo 'exists' || echo 'not_exists'",
+                f"Проверка {frontend_dir}"
+            )
+            
+            if 'not_exists' in output:
+                print("Директория не найдена. Клонирую репозиторий...")
+                execute_ssh_command(
+                    ssh,
+                    f"cd {PROJECT_DIR} && git clone https://github.com/Hexttr/shannon.git temp_repo 2>&1 || true",
+                    "Клонирование репозитория"
+                )
+                execute_ssh_command(
+                    ssh,
+                    f"cd {PROJECT_DIR} && (test -d temp_repo/template && mv temp_repo/template {frontend_dir} && rm -rf temp_repo || mkdir -p {frontend_dir})",
+                    "Создание директории frontend"
+                )
+        
+        if not frontend_dir:
+            print("Не удалось определить директорию frontend", file=sys.stderr)
+            sys.exit(1)
+        
+        # 3. Проверяем наличие package.json
+        print(f"\n3. Проверяю наличие package.json в {frontend_dir}...")
+        success, check_output = execute_ssh_command(
+            ssh,
+            f"test -f {frontend_dir}/package.json && echo 'exists' || echo 'not_exists'",
+            "Проверка package.json"
+        )
+        
+        if 'not_exists' in check_output:
+            print("package.json не найден. Копирую файлы из репозитория...")
+            # Если директория пустая, копируем файлы
+            execute_ssh_command(
+                ssh,
+                f"cd {PROJECT_DIR} && (test -d temp_repo && cp -r temp_repo/template/* {frontend_dir}/ || true)",
+                "Копирование файлов"
+            )
+        
+        # 4. Устанавливаем зависимости
+        print(f"\n4. Устанавливаю зависимости frontend в {frontend_dir}...")
+        if not execute_ssh_command(
+            ssh,
+            f"cd {frontend_dir} && npm install",
+            "npm install"
+        )[0]:
+            print("Ошибка при установке зависимостей", file=sys.stderr)
+            sys.exit(1)
+        
+        # 5. Собираем frontend
+        print(f"\n5. Собираю frontend в {frontend_dir}...")
+        if not execute_ssh_command(
+            ssh,
+            f"cd {frontend_dir} && npm run build",
+            "npm run build"
+        )[0]:
+            print("Ошибка при сборке frontend", file=sys.stderr)
+            sys.exit(1)
+        
+        # 6. Проверяем наличие nginx
+        print("\n6. Проверяю наличие nginx...")
+        success, _ = execute_ssh_command(
+            ssh,
+            "which nginx && nginx -v",
+            "Проверка nginx"
+        )
+        
+        if not success:
+            print("\nNginx не найден. Устанавливаю nginx...")
+            if not execute_ssh_command(ssh, "apt-get update && apt-get install -y nginx", "Установка nginx")[0]:
+                print("Ошибка при установке nginx", file=sys.stderr)
+                sys.exit(1)
+        
+        # 7. Настраиваем nginx
+        print("\n7. Настраиваю nginx...")
+        dist_dir = f"{frontend_dir}/dist"
+        nginx_config = f"""server {{
+    listen 80;
+    server_name 72.56.79.153;
+    
+    root {dist_dir};
+    index index.html;
+    
+    location / {{
+        try_files $uri $uri/ /index.html;
+    }}
+    
+    location ~* \\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {{
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }}
+    
+    location /api {{
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }}
+    
+    location /socket.io {{
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }}
+}}
+"""
+        
+        # Сохраняем конфигурацию через echo
+        config_file = "/etc/nginx/sites-available/shannon"
+        stdin, stdout, stderr = ssh.exec_command(f"cat > {config_file} << 'NGINX_EOF'\n{nginx_config}\nNGINX_EOF\n")
+        exit_status = stdout.channel.recv_exit_status()
+        
+        if exit_status != 0:
+            print("Ошибка при создании конфигурации nginx", file=sys.stderr)
+            sys.exit(1)
+        
+        # Активируем конфигурацию
+        execute_ssh_command(
+            ssh,
+            f"ln -sf {config_file} /etc/nginx/sites-enabled/ && rm -f /etc/nginx/sites-enabled/default",
+            "Активация конфигурации nginx"
+        )
+        
+        # Проверяем конфигурацию
+        if not execute_ssh_command(ssh, "nginx -t", "Проверка конфигурации nginx")[0]:
+            print("Ошибка в конфигурации nginx", file=sys.stderr)
+            sys.exit(1)
+        
+        # Перезапускаем nginx
+        execute_ssh_command(ssh, "systemctl restart nginx", "Перезапуск nginx")
+        execute_ssh_command(ssh, "systemctl status nginx --no-pager | head -10", "Статус nginx")
+        
+        print("\n" + "="*60)
+        print("РАЗВЕРТЫВАНИЕ ЗАВЕРШЕНО УСПЕШНО!")
+        print("="*60)
+        print(f"\nFrontend доступен по адресу: http://{SSH_HOST}/")
+        print(f"Backend API: http://{SSH_HOST}/api/")
+        print(f"WebSocket: ws://{SSH_HOST}/socket.io/")
+        print(f"\nДиректория сборки: {dist_dir}")
+        print("\nПроверьте работу приложения в браузере!")
+        
+    except Exception as e:
+        print(f"\nКритическая ошибка: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+    finally:
+        ssh.close()
+        print("\nСоединение закрыто.")
+
+if __name__ == "__main__":
+    main()
