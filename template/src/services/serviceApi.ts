@@ -4,25 +4,25 @@ import { normalizeService } from '../utils/normalize';
 
 export const serviceApi = {
   getAll: async (): Promise<{ data: Service[] }> => {
-    const response = await api.get<Service[]>('/api/services');
+    const response = await api.get<Service[]>('/services');
     return { data: response.data.map(normalizeService) };
   },
 
   getById: async (id: number): Promise<{ data: Service }> => {
-    const response = await api.get<Service>(`/api/services/${id}`);
+    const response = await api.get<Service>(`/services/${id}`);
     return { data: normalizeService(response.data) };
   },
 
   create: async (data: CreateServiceRequest): Promise<{ data: Service }> => {
-    return api.post<Service>('/api/services', data);
+    return api.post<Service>('/services', data);
   },
 
   update: async (id: number, data: UpdateServiceRequest): Promise<{ data: Service }> => {
-    return api.put<Service>(`/api/services/${id}`, data);
+    return api.put<Service>(`/services/${id}`, data);
   },
 
   delete: async (id: number): Promise<void> => {
-    return api.delete(`/api/services/${id}`);
+    return api.delete(`/services/${id}`);
   },
 };
 

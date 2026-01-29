@@ -3,7 +3,7 @@ import { LoginRequest, Token, User } from '../types';
 
 export const authApi = {
   login: async (credentials: LoginRequest): Promise<{ data: Token }> => {
-    const response = await api.post<Token>('/api/auth/login', credentials);
+    const response = await api.post<Token>('/auth/login', credentials);
     if (response.data.access_token) {
       localStorage.setItem('access_token', response.data.access_token);
     }
@@ -15,7 +15,7 @@ export const authApi = {
   },
 
   getMe: async (): Promise<{ data: User }> => {
-    return api.get<User>('/api/auth/me');
+    return api.get<User>('/auth/me');
   },
 };
 

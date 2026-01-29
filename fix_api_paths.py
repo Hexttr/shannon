@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Исправление и пересборка frontend
+Исправление путей API и пересборка frontend
 """
 
 import paramiko
@@ -18,7 +18,7 @@ def upload_file(sftp, local_path, remote_path):
 
 def main():
     print("="*60)
-    print("ИСПРАВЛЕНИЕ И ПЕРЕСБОРКА FRONTEND")
+    print("ИСПРАВЛЕНИЕ ПУТЕЙ API")
     print("="*60)
     
     ssh = paramiko.SSHClient()
@@ -28,14 +28,12 @@ def main():
     
     try:
         # Загружаем исправленные файлы через SFTP
-        print("\n1. Загружаю исправленные файлы...")
+        print("\n1. Загружаю исправленные API файлы...")
         
         files_to_upload = [
-            ('template/src/App.tsx', '/root/shannon/template/src/App.tsx'),
-            ('template/src/contexts/AuthContext.tsx', '/root/shannon/template/src/contexts/AuthContext.tsx'),
-            ('template/src/pages/Login.tsx', '/root/shannon/template/src/pages/Login.tsx'),
-            ('template/src/pages/Analytics.tsx', '/root/shannon/template/src/pages/Analytics.tsx'),
-            ('template/src/pages/Dashboard.tsx', '/root/shannon/template/src/pages/Dashboard.tsx'),
+            ('template/src/services/authApi.ts', '/root/shannon/template/src/services/authApi.ts'),
+            ('template/src/services/pentestApi.ts', '/root/shannon/template/src/services/pentestApi.ts'),
+            ('template/src/services/serviceApi.ts', '/root/shannon/template/src/services/serviceApi.ts'),
         ]
         
         for local, remote in files_to_upload:
@@ -48,18 +46,12 @@ def main():
         
         # Пересобираем frontend
         print("\n2. Пересобираю frontend...")
-        stdin, stdout, stderr = ssh.exec_command("cd /root/shannon/template && npm run build 2>&1 | tail -20")
+        stdin, stdout, stderr = ssh.exec_command("cd /root/shannon/template && npm run build 2>&1 | tail -15")
         output = stdout.read().decode('utf-8', errors='replace')
-        error_output = stderr.read().decode('utf-8', errors='replace')
         try:
-            print(output[:1000])
+            print(output[:800])
         except:
-            print(output[:1000].encode('ascii', 'replace').decode('ascii'))
-        if error_output:
-            try:
-                print("ERROR:", error_output[:500])
-            except:
-                print("ERROR:", error_output[:500].encode('ascii', 'replace').decode('ascii'))
+            print(output[:800].encode('ascii', 'replace').decode('ascii'))
         
         # Копируем dist
         print("\n3. Копирую dist...")
@@ -70,7 +62,7 @@ def main():
         print("ГОТОВО!")
         print("="*60)
         print(f"\nОткройте: https://{SSH_HOST}/")
-        print("Проверьте консоль браузера для debug логов")
+        print("Теперь логин должен работать!")
         
     finally:
         ssh.close()
