@@ -2,8 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-  // В production всегда используем /app/, в development - /
-  const base = mode === 'production' || process.env.NODE_ENV === 'production' ? '/app/' : '/';
+  // В production используем корень /
+  const base = '/';
 
   return {
     plugins: [react()],
@@ -13,10 +13,9 @@ export default defineConfig(({ mode }) => {
       // Добавляем хеш к именам файлов для кэширования
       rollupOptions: {
         output: {
-          // Добавляем timestamp для принудительного обновления
-          entryFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-          chunkFileNames: `assets/[name]-[hash]-${Date.now()}.js`,
-          assetFileNames: `assets/[name]-[hash]-${Date.now()}.[ext]`,
+          entryFileNames: `assets/[name]-[hash].js`,
+          chunkFileNames: `assets/[name]-[hash].js`,
+          assetFileNames: `assets/[name]-[hash].[ext]`,
         },
       },
     },
@@ -27,9 +26,10 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: 'http://72.56.79.153:8000',
           changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
         },
         '/socket.io': {
-          target: 'http://72.56.79.153:8000',
+          target: 'ws://72.56.79.153:8000',
           ws: true,
         },
       },
