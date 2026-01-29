@@ -94,8 +94,32 @@ class ClaudeClient:
             result = json.loads(response_text)
             return result
             
+        except anthropic.APIError as e:
+            error_msg = str(e)
+            logger.error(f"Ошибка API Claude при анализе результатов: {e}")
+            
+            # Проверяем тип ошибки
+            if e.status_code == 401:
+                logger.error("Ошибка аутентификации API Claude (401) - проверьте API ключ")
+            elif e.status_code == 403:
+                logger.error("Доступ запрещен API Claude (403) - проверьте права доступа")
+            elif e.status_code == 429:
+                logger.error("Превышен лимит запросов API Claude (429) - rate limit")
+            elif e.status_code == 402:
+                logger.error("Недостаточно средств на счету API Claude (402) - пополните баланс")
+            else:
+                logger.error(f"Ошибка API Claude (код {e.status_code}): {error_msg}")
+            
+            # Возвращаем пустой результат при ошибке
+            return {
+                "vulnerabilities": [],
+                "summary": f"Ошибка анализа через Claude API: {error_msg}",
+                "recommendations": "Проверьте баланс и настройки API ключа"
+            }
         except Exception as e:
-            logger.error(f"Ошибка при анализе результатов Claude: {e}")
+            logger.error(f"Неожиданная ошибка при анализе результатов Claude: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             # Возвращаем пустой результат при ошибке
             return {
                 "vulnerabilities": [],
