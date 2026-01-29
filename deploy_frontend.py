@@ -211,9 +211,8 @@ def main():
     }}
 }}
 """
-    index index.html;
-    
-    location / {{
+        
+        # Сохраняем конфигурацию через echo
         try_files $uri $uri/ /index.html;
     }}
     
