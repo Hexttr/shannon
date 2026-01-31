@@ -1,3 +1,0 @@
-# Shannon Pentest Platform Backend
-
-

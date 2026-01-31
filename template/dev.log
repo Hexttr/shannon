@@ -1,0 +1,24 @@
+
+> xaker-frontend@0.1.0 dev
+> vite
+
+X [ERROR] Unexpected end of file
+
+    vite.config.ts:1:1349:
+      1 тФВ ...localhost:3000',          ws: true,        },      },    },  };});
+        тХ╡                                                                      ^
+
+failed to load config from C:\shannon\template\vite.config.ts
+error when starting dev server:
+Error: Build failed with 1 error:
+vite.config.ts:1:1349: ERROR: Unexpected end of file
+    at failureErrorWithLog (C:\shannon\template\node_modules\esbuild\lib\main.js:1472:15)
+    at C:\shannon\template\node_modules\esbuild\lib\main.js:945:25
+    at runOnEndCallbacks (C:\shannon\template\node_modules\esbuild\lib\main.js:1315:45)
+    at buildResponseToResult (C:\shannon\template\node_modules\esbuild\lib\main.js:943:7)
+    at C:\shannon\template\node_modules\esbuild\lib\main.js:970:16
+    at responseCallbacks.<computed> (C:\shannon\template\node_modules\esbuild\lib\main.js:622:9)
+    at handleIncomingPacket (C:\shannon\template\node_modules\esbuild\lib\main.js:677:12)
+    at Socket.readFromStdout (C:\shannon\template\node_modules\esbuild\lib\main.js:600:7)
+    at Socket.emit (node:events:507:28)
+    at addChunk (node:internal/streams/readable:559:12)
