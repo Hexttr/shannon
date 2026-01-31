@@ -17,6 +17,9 @@ import Logo from './Logo';
 interface MenuItem {
   path: string;
   
+  
+  
+  
   label: string;
   icon: React.ReactNode;
 }
