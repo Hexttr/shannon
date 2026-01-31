@@ -23,13 +23,7 @@ class LoginAction
         $token = $user->createToken('auth-token')->plainTextToken;
 
         return [
-            'user' => UserData::from([
-                'id' => $user->id,
-                'username' => $user->username,
-                'email' => $user->email,
-                'created_at' => $user->created_at?->toISOString(),
-                'updated_at' => $user->updated_at?->toISOString(),
-            ]),
+            'user' => UserData::from($user),
             'token' => $token,
         ];
     }
