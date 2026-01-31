@@ -16,16 +16,18 @@ import Logo from './Logo';
 
 interface MenuItem {
   path: string;
+  
   label: string;
   icon: React.ReactNode;
 }
 
 const menuItems: MenuItem[] = [
-  { path: '/home', label: 'Главная', icon: <FiHome /> },
-  { path: '/home/services', label: 'Сервисы', icon: <FiServer /> },
-  { path: '/home/pentests', label: 'Пентесты', icon: <FiShield /> },
-  { path: '/home/reports', label: 'Отчеты', icon: <FiFileText /> },
-  { path: '/home/analytics', label: 'Аналитика', icon: <FiBarChart2 /> },
+  
+  { path: '/home', label: 'Главная', icon: <FiHome /> }},
+  { path: '/home/services', label: 'Сервисы', icon: <FiServer /> }},
+  { path: '/home/pentests', label: 'Пентесты', icon: <FiShield /> }},
+  { path: '/home/reports', label: 'Отчеты', icon: <FiFileText /> }},
+  { path: '/home/analytics', label: 'Аналитика', icon: <FiBarChart2 /> }},
   { path: '/home/about', label: 'О сервисе', icon: <FiInfo /> },
 ];
 
