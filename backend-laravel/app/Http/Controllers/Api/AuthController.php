@@ -6,8 +6,8 @@ use App\Data\Auth\LoginData;
 use App\Domain\Auth\Actions\GetCurrentUserAction;
 use App\Domain\Auth\Actions\LoginAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
@@ -18,9 +18,9 @@ class AuthController extends Controller
     ) {
     }
 
-    public function login(Request $request): JsonResponse
+    public function login(LoginRequest $request): JsonResponse
     {
-        $data = LoginData::from($request->all());
+        $data = LoginData::from($request->validated());
         $result = $this->loginAction->execute($data);
 
         return response()->json([

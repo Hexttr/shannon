@@ -7,8 +7,8 @@ use App\Domain\Services\Actions\CreateServiceAction;
 use App\Domain\Services\Actions\DeleteServiceAction;
 use App\Domain\Services\Actions\GetAllServicesAction;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CreateServiceRequest;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
@@ -28,9 +28,9 @@ class ServiceController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(CreateServiceRequest $request): JsonResponse
     {
-        $data = CreateServiceData::from($request->all());
+        $data = CreateServiceData::from($request->validated());
         $service = $this->createServiceAction->execute($data);
 
         return response()->json([

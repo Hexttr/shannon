@@ -26,7 +26,8 @@ class SshClientService
     {
         if (!$this->ssh) {
             // Локальное выполнение команды
-            return shell_exec($command) ?? '';
+            $output = shell_exec($command . ' 2>&1');
+            return $output ?? '';
         }
 
         return $this->ssh->exec($command);
