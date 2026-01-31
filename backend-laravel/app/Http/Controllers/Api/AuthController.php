@@ -31,7 +31,7 @@ class AuthController extends Controller
 
     public function me(): JsonResponse
     {
-        $user = $this->getCurrentUserAction->execute();
+        $user = $this->getCurrentUserAction->execute(Auth::user());
 
         return response()->json($user->toArray());
     }
