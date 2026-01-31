@@ -9,6 +9,8 @@ return [
         env('FRONTEND_URL', 'http://localhost:5173'),
         'http://localhost:5173',
         'http://127.0.0.1:5173',
+        'https://72.56.79.153',
+        'http://72.56.79.153',
     ],
 
     'allowed_origins_patterns' => [],
