@@ -24,3 +24,4 @@ class LogController extends Controller
 }
 
 
+

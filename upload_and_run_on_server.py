@@ -63,3 +63,4 @@ if len(output_lines) > 50:
 ssh.close()
 print("\nДиагностика завершена")
 
+

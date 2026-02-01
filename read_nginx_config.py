@@ -22,3 +22,4 @@ with open("nginx_shannon.conf", 'w', encoding='utf-8') as f:
 print("Конфигурация сохранена в nginx_shannon.conf")
 ssh.close()
 
+

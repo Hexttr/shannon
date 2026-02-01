@@ -28,3 +28,4 @@ print(output)
 ssh.close()
 print("\nПроверка завершена")
 
+

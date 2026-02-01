@@ -259,3 +259,4 @@ tail -f /var/log/nginx/error.log
 Проверьте `config/cors.php` в Laravel backend и убедитесь, что `FRONTEND_URL` настроен правильно.
 
 
+

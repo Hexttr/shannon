@@ -20,3 +20,4 @@ with ServerConnection() as conn:
     output, error, code = conn.execute("curl -X POST http://localhost:8000/api/auth/login -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' 2>&1")
     print(output[-300:])
 
+

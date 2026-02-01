@@ -97,3 +97,4 @@ ssh.exec_command("systemctl restart shannon-laravel.service")
 ssh.close()
 print("\n=== Готово ===")
 
+

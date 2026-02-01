@@ -1,10 +1,31 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-// TODO: Add API import here
-// TODO: Add API import here
-import {  FiServer,  FiShield,  FiAlertCircle,  FiCheckCircle,  FiActivity,  FiClock,  FiArrowRight,} from 'react-icons/fi';
-import {  LineChart,  Line,  PieChart,  Pie,  Cell,  XAxis,  YAxis,  CartesianGrid,  Tooltip,  Legend,  ResponsiveContainer,} from 'recharts';
+import { serviceApi } from '../services/serviceApi';
+import { pentestApi } from '../services/pentestApi';
+import type { Service, Pentest, Vulnerability } from '../types';
+import {
+  FiServer,
+  FiShield,
+  FiAlertCircle,
+  FiCheckCircle,
+  FiActivity,
+  FiClock,
+  FiArrowRight,
+} from 'react-icons/fi';
+import {
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 export default function Home() {  const [selectedServiceId, setSelectedServiceId] = useState<string>('');  // Загружаем сервисы  const { data: services = [] } = useQuery({    queryKey: ['services'],    queryFn: () => serviceApi.getAll().then(res => res.data),  });  // Загружаем пентесты  const { data: pentests = [] } = useQuery({    queryKey: ['pentests'],    queryFn: () => pentestApi.getAll().then(res => res.data),  });  // Фильтруем пентесты по выбранному сервису  const selectedService = services.find(s => s.id === selectedServiceId);  const filteredPentests = useMemo(() => {    if (!selectedServiceId) return pentests;    return pentests.filter(p => p.targetUrl === selectedService?.url);  }, [pentests, selectedServiceId, selectedService]);  // Загружаем уязвимости для последних 5 завершенных пентестов  const completedPentests = filteredPentests.filter(p => p.status === 'completed');  const pentestsToLoad = completedPentests.slice(0, 5);    // Загружаем уязвимости для каждого пентеста отдельно  const vulnerabilitiesData1 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[0]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[0]!.id).then(res => res.data),    enabled: !!pentestsToLoad[0]?.id,    staleTime: 5 * 60 * 1000,  });  const vulnerabilitiesData2 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[1]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[1]!.id).then(res => res.data),    enabled: !!pentestsToLoad[1]?.id,    staleTime: 5 * 60 * 1000,  });  const vulnerabilitiesData3 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[2]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[2]!.id).then(res => res.data),    enabled: !!pentestsToLoad[2]?.id,    staleTime: 5 * 60 * 1000,  });  const vulnerabilitiesData4 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[3]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[3]!.id).then(res => res.data),    enabled: !!pentestsToLoad[3]?.id,    staleTime: 5 * 60 * 1000,  });  const vulnerabilitiesData5 = useQuery({    queryKey: ['vulnerabilities', pentestsToLoad[4]?.id],    queryFn: () => pentestApi.getVulnerabilities(pentestsToLoad[4]!.id).then(res => res.data),    enabled: !!pentestsToLoad[4]?.id,    staleTime: 5 * 60 * 1000,  });    const allVulnerabilitiesQueries = [    vulnerabilitiesData1,    vulnerabilitiesData2,    vulnerabilitiesData3,    vulnerabilitiesData4,    vulnerabilitiesData5,  ];  // Вычисляем метрики  const metrics = useMemo(() => {    const totalServices = services.length;    const totalPentests = filteredPentests.length;    const completedCount = filteredPentests.filter(p => p.status === 'completed').length;    const runningCount = filteredPentests.filter(p => p.status === 'running').length;    const failedCount = filteredPentests.filter(p => p.status === 'failed').length;    // Собираем все уязвимости из загруженных запросов    let allVulnerabilities: Vulnerability[] = [
   

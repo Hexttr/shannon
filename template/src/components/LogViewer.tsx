@@ -57,3 +57,4 @@ export default function LogViewer({ logs, autoScroll = true, maxHeight = '400px'
 }
 
 
+

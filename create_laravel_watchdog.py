@@ -64,3 +64,4 @@ print("Для включения: systemctl enable shannon-watchdog.service")
 
 ssh.close()
 
+

@@ -1,49 +1,69 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Получение полной ошибки
+Получение полной ошибки из логов Laravel
 """
 
-import paramiko
 import sys
+import os
 
 if sys.platform == 'win32':
-    import codecs
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    os.system('chcp 65001 >nul')
+    sys.stdout.reconfigure(encoding='utf-8')
 
-SSH_HOST = "72.56.79.153"
-SSH_USER = "root"
-SSH_PASSWORD = "m8J@2_6whwza6U"
-BACKEND_DIR = "/root/shannon/backend-laravel"
+from server_utils import ServerConnection
 
-def ssh_exec(ssh, command):
-    stdin, stdout, stderr = ssh.exec_command(command)
-    exit_status = stdout.channel.recv_exit_status()
-    output = stdout.read().decode('utf-8', errors='replace')
-    error = stderr.read().decode('utf-8', errors='replace')
-    return exit_status == 0, output, error
+def get_full_error(conn):
+    """Получает полную ошибку из лога"""
+    print("\n" + "="*60)
+    print("🔍 Получение полной ошибки из лога...")
+    print("="*60)
+    
+    log_file = "/root/shannon/backend-laravel/storage/logs/laravel.log"
+    
+    # Получаем последние 200 строк и ищем ошибки
+    print("\n📋 Последняя ошибка (полный стек):")
+    output, error, code = conn.execute(f"tail -n 200 {log_file} 2>&1 | grep -A 100 'ERROR\\|Exception\\|Error' | tail -n 150")
+    
+    if output:
+        print(output)
+    else:
+        # Если не нашли через grep, просто показываем последние строки
+        output, error, code = conn.execute(f"tail -n 100 {log_file} 2>&1")
+        if output:
+            print(output)
+
+def check_recent_errors(conn):
+    """Проверяет недавние ошибки"""
+    print("\n" + "="*60)
+    print("🔍 Проверка недавних ошибок...")
+    print("="*60)
+    
+    log_file = "/root/shannon/backend-laravel/storage/logs/laravel.log"
+    
+    # Ищем ошибки за последние 5 минут
+    output, error, code = conn.execute(f"grep -i 'error\\|exception\\|fatal' {log_file} | tail -n 20")
+    if output:
+        print(output)
+    else:
+        print("   Недавних ошибок не найдено")
 
 def main():
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(SSH_HOST, username=SSH_USER, password=SSH_PASSWORD, timeout=30)
+    """Главная функция"""
+    conn = ServerConnection()
+    if not conn.connect():
+        print("❌ Не удалось подключиться к серверу")
+        return False
     
     try:
-        # Очищаем логи и делаем запрос
-        ssh_exec(ssh, f"echo '' > {BACKEND_DIR}/storage/logs/laravel.log")
-        ssh_exec(ssh, "curl -s http://localhost:8000/api/auth/login -X POST -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' > /dev/null")
-        
-        import time
-        time.sleep(1)
-        
-        # Получаем весь лог
-        success, output, error = ssh_exec(ssh, f"cat {BACKEND_DIR}/storage/logs/laravel.log 2>&1")
-        print(output)
-        
+        get_full_error(conn)
+        check_recent_errors(conn)
+        return True
+    except Exception as e:
+        print(f"\n❌ Ошибка: {e}")
+        return False
     finally:
-        ssh.close()
+        conn.close()
 
 if __name__ == "__main__":
     main()
-
-

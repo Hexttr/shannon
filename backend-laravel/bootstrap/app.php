@@ -20,6 +20,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Обработка неаутентифицированных запросов для API
+        $exceptions->shouldRenderJsonWhen(function (\Illuminate\Http\Request $request, \Throwable $e) {
+            return $request->expectsJson() || $request->is('api/*');
+        });
     })->create();
 

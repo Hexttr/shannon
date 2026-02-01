@@ -69,3 +69,4 @@ def check_frontend_errors():
 if __name__ == "__main__":
     check_frontend_errors()
 
+
