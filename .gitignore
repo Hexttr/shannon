@@ -1,0 +1,5 @@
+
+# Claude API key scripts (contain secrets)
+setup_claude_api_key.py
+fix_claude_config_for_queue.py
+verify_and_fix_claude_key.py
