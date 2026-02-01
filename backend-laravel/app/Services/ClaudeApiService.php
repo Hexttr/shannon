@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
+use App\Services\Contracts\AiAnalysisServiceInterface;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class ClaudeApiService
+class ClaudeApiService implements AiAnalysisServiceInterface
 {
     private ?string $apiKey;
     private string $apiUrl = 'https://api.anthropic.com/v1/messages';

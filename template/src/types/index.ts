@@ -61,6 +61,7 @@ export interface CreatePentestRequest {
   name: string;
   config: {
     targetUrl: string;
+    aiProvider?: 'claude' | 'ollama';
   };
 }
 
