@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class ClaudeApiService
 {
-    private string $apiKey;
+    private ?string $apiKey;
     private string $apiUrl = 'https://api.anthropic.com/v1/messages';
 
     public function __construct()
