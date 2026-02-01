@@ -35,10 +35,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response.data);
       } catch (error: any) {
         window.__DEBUG__?.log('[AuthContext] Токен невалиден или ошибка API:', error.response?.status, error.response?.data);
-        // Токен невалиден или ошибка API, очищаем
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user');
-        setUser(null);
+        // Очищаем токен только при реальной 401 ошибке (не при таймаутах)
+        if (error.response?.status === 401 && error.response?.statusText !== 'Gateway Timeout') {
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user');
+          setUser(null);
+        }
+        // При таймаутах оставляем токен и пользователя
       } finally {
         // Всегда устанавливаем isLoading в false, даже при ошибке
         setIsLoading(false);

@@ -44,11 +44,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Выкидываем пользователя только при реальной 401 ошибке (не при таймаутах)
+    if (error.response?.status === 401 && error.response?.statusText !== 'Gateway Timeout') {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
-      window.location.href = '/';
+      // Не редиректим сразу, даем возможность обработать ошибку
+      if (window.location.pathname !== '/') {
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 100);
+      }
     }
+    // При таймаутах (504, 502) не выкидываем пользователя
     return Promise.reject(error);
   }
 );
