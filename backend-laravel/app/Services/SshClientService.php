@@ -30,15 +30,26 @@ class SshClientService
             return $output ?? '';
         }
 
-        // Устанавливаем таймаут для SSH соединения
+        // Устанавливаем таймаут для SSH соединения (в секундах)
         $this->ssh->setTimeout($timeout);
         
         // Запускаем команду с таймаутом через timeout утилиту
-        // Не используем escapeshellarg для команды, так как она уже содержит кавычки и переменные окружения
-        // Просто оборачиваем в timeout
+        // Важно: не используем escapeshellarg, так как команда уже содержит переменные окружения и кавычки
+        // timeout должен получить команду как есть
         $commandWithTimeout = "timeout {$timeout} {$command} 2>&1";
         
-        return $this->ssh->exec($commandWithTimeout);
+        $result = $this->ssh->exec($commandWithTimeout);
+        
+        // Если команда не выполнилась из-за timeout, проверяем
+        if (empty($result) && $this->ssh->getExitStatus() !== 0) {
+            // Пробуем выполнить без timeout для диагностики
+            $testResult = $this->ssh->exec($command . ' 2>&1');
+            if (!empty($testResult)) {
+                return $testResult;
+            }
+        }
+        
+        return $result;
     }
 
     public function __destruct()
