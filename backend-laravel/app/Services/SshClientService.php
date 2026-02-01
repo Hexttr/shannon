@@ -22,15 +22,21 @@ class SshClientService
         }
     }
 
-    public function execute(string $command): string
+    public function execute(string $command, int $timeout = 600): string
     {
         if (!$this->ssh) {
-            // Локальное выполнение команды
-            $output = shell_exec($command . ' 2>&1');
+            // Локальное выполнение команды с таймаутом
+            $output = shell_exec("timeout {$timeout} " . $command . ' 2>&1');
             return $output ?? '';
         }
 
-        return $this->ssh->exec($command);
+        // Устанавливаем таймаут для SSH соединения
+        $this->ssh->setTimeout($timeout);
+        
+        // Запускаем команду с таймаутом через timeout утилиту
+        $commandWithTimeout = "timeout {$timeout} " . $command;
+        
+        return $this->ssh->exec($commandWithTimeout);
     }
 
     public function __destruct()
