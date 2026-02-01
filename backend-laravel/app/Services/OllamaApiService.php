@@ -140,9 +140,13 @@ class OllamaApiService implements AiAnalysisServiceInterface
             }
         }
         
-        // Удаляем markdown code blocks если есть
-        $content = preg_replace('/```json\s*/', '', $content);
+        // Удаляем markdown code blocks если есть (более агрессивно)
+        $content = preg_replace('/```json\s*/i', '', $content);
         $content = preg_replace('/```\s*/', '', $content);
+        // Удаляем все что до первой { и после последней }
+        if (preg_match('/\{.*\}/s', $content, $matches)) {
+            $content = $matches[0];
+        }
         $content = trim($content);
         
         // Ищем JSON объект - пробуем несколько вариантов
