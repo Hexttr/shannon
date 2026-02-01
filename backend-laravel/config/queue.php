@@ -14,7 +14,7 @@ return [
             'driver' => 'database',
             'table' => 'jobs',
             'queue' => 'default',
-            'retry_after' => 90,
+            'retry_after' => 21600, // 6 часов - соответствует timeout пентеста
             'after_commit' => false,
         ],
 
