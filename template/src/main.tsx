@@ -64,13 +64,25 @@ window.__DEBUG__ = window.__DEBUG__ || {
 
 window.__DEBUG__.log('[main.tsx] Инициализация приложения...');
 
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </React.StrictMode>
-);
-
-window.__DEBUG__?.log('[main.tsx] Приложение инициализировано');
+try {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </React.StrictMode>
+  );
+  window.__DEBUG__?.log('[main.tsx] Приложение инициализировано');
+} catch (error) {
+  console.error('[main.tsx] КРИТИЧЕСКАЯ ОШИБКА при инициализации:', error);
+  window.__DEBUG__?.log('[main.tsx] ОШИБКА:', error);
+  // Показываем ошибку пользователю
+  rootElement.innerHTML = `
+    <div style="color: white; padding: 20px; font-family: monospace;">
+      <h1 style="color: red;">Ошибка загрузки приложения</h1>
+      <pre style="background: #222; padding: 10px; border-radius: 5px;">${error}</pre>
+      <p>Откройте консоль браузера (F12) для подробностей</p>
+    </div>
+  `;
+}

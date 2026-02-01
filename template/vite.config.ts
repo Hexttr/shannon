@@ -2,8 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
-  // В production всегда используем /app/, в development - /
-  const base = mode === 'production' || process.env.NODE_ENV === 'production' ? '/app/' : '/';
+  // Используем корневой путь для простоты
+  const base = '/';
 
   return {
     plugins: [react()],

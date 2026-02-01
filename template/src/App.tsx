@@ -31,11 +31,9 @@ function ProtectedRoute({ children }: { children: React.ReactElement }) {
 }
 
 function AppRoutes() {
-  // Определяем базовый путь: /app в production, / в development
-  const basename = window.location.hostname === 'localhost' ? '/' : '/app';
-
+  // Используем корневой путь
   return (
-    <BrowserRouter basename={basename}>
+    <BrowserRouter basename="/">
       <Routes>
         <Route path="/" element={<Login />} />
         <Route
