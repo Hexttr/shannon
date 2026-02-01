@@ -1,0 +1,14 @@
+[Unit]
+Description=Shannon Laravel Queue Worker
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/shannon/backend-laravel
+ExecStart=/usr/bin/php /root/shannon/backend-laravel/artisan queue:work database --sleep=3 --tries=3 --timeout=21600 --max-time=21600
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
