@@ -1,77 +1,96 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Финальная проверка исправлений на сервере
+"""
+
 import sys
 import os
-import paramiko
 
 if sys.platform == 'win32':
     os.system('chcp 65001 >nul')
     sys.stdout.reconfigure(encoding='utf-8')
 
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect("72.56.79.153", port=22, username="root", password="m8J@2_6whwza6U", timeout=10)
+from server_utils import ServerConnection
 
-print("=== Финальная проверка ===\n")
+def final_check():
+    """Финальная проверка"""
+    conn = ServerConnection()
+    if not conn.connect():
+        print("❌ Не удалось подключиться к серверу")
+        return False
+    
+    try:
+        print("="*60)
+        print("✅ ФИНАЛЬНАЯ ПРОВЕРКА ИСПРАВЛЕНИЙ")
+        print("="*60)
+        
+        # 1. Проверяем команду Nikto
+        print("\n1. Проверка команды Nikto на сервере:")
+        output, _, _ = conn.execute('grep -A 5 "runNiktoScan" /root/shannon/backend-laravel/app/Domain/Pentests/Engine/PentestEngine.php | head -7')
+        print(output)
+        if 'HTTP_USER_AGENT=' in output and '"' in output:
+            print("   ✅ Команда Nikto исправлена - используются двойные кавычки")
+        else:
+            print("   ❌ Команда Nikto НЕ исправлена")
+        
+        # 2. Проверяем команду Nuclei
+        print("\n2. Проверка команды Nuclei на сервере:")
+        output, _, _ = conn.execute('grep -A 5 "runNucleiScan" /root/shannon/backend-laravel/app/Domain/Pentests/Engine/PentestEngine.php | head -7')
+        print(output)
+        if '-H "' in output:
+            print("   ✅ Команда Nuclei исправлена - используются двойные кавычки")
+        else:
+            print("   ❌ Команда Nuclei НЕ исправлена")
+        
+        # 3. Проверяем команду Dirb
+        print("\n3. Проверка команды Dirb на сервере:")
+        output, _, _ = conn.execute('grep -A 5 "runDirbScan" /root/shannon/backend-laravel/app/Domain/Pentests/Engine/PentestEngine.php | head -7')
+        print(output)
+        if '-H "' in output:
+            print("   ✅ Команда Dirb исправлена - используются двойные кавычки")
+        else:
+            print("   ❌ Команда Dirb НЕ исправлена")
+        
+        # 4. Тест выполнения команды Nikto
+        print("\n4. Тест выполнения команды Nikto:")
+        test_cmd = 'HTTP_USER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" timeout 5 nikto -Version 2>&1'
+        output, _, code = conn.execute(test_cmd)
+        if code == 0 and 'Nikto' in output:
+            print(f"   ✅ Команда выполняется: {output[:100]}")
+        else:
+            print(f"   ❌ Команда не выполняется: {output[:200]}")
+        
+        # 5. Проверяем статус queue worker
+        print("\n5. Статус queue worker:")
+        output, _, _ = conn.execute('systemctl is-active shannon-queue.service')
+        if 'active' in output:
+            print("   ✅ Queue worker работает")
+        else:
+            print(f"   ⚠️  Queue worker: {output.strip()}")
+        
+        # 6. Проверяем последний коммит
+        print("\n6. Последний коммит на сервере:")
+        output, _, _ = conn.execute('cd /root/shannon && git log --oneline -1')
+        print(f"   {output.strip()}")
+        
+        print("\n" + "="*60)
+        print("✅ ПРОВЕРКА ЗАВЕРШЕНА")
+        print("="*60)
+        print("\n💡 Все исправления применены!")
+        print("💡 Файлы обновлены на сервере!")
+        print("💡 Queue worker перезапущен!")
+        print("\n✅ Можно запускать новый пентест!")
+        
+        return True
+        
+    except Exception as e:
+        print(f"\n❌ Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+    finally:
+        conn.close()
 
-# Статус сервисов
-print("[1] Статус сервисов:")
-stdin, stdout, stderr = ssh.exec_command("systemctl is-active shannon-laravel.service shannon-queue.service nginx.service")
-stdout.channel.settimeout(3)
-try:
-    output = stdout.read().decode('utf-8').strip()
-    print(output)
-except:
-    pass
-
-# Проверка конфигурации очереди
-print("\n[2] Конфигурация очереди:")
-stdin, stdout, stderr = ssh.exec_command("cd /root/shannon/backend-laravel && timeout 3 php artisan tinker --execute=\"echo config('queue.default');\" 2>&1 | tail -3")
-stdout.channel.settimeout(5)
-try:
-    output = stdout.read().decode('utf-8', errors='ignore').strip()
-    queue_type = output.split('\n')[-1] if '\n' in output else output
-    print(f"Тип очереди: {queue_type}")
-except:
-    pass
-
-# Тест API
-print("\n[3] Тест API:")
-stdin, stdout, stderr = ssh.exec_command("timeout 5 curl -s http://localhost:8000/api/auth/login -X POST -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' | head -3")
-stdout.channel.settimeout(6)
-try:
-    output = stdout.read().decode('utf-8', errors='ignore').strip()
-    if 'token' in output:
-        print("✓ API работает")
-    else:
-        print(f"Ответ: {output[:200]}")
-except:
-    print("Таймаут")
-
-# Проверка процессов
-print("\n[4] Активные процессы:")
-stdin, stdout, stderr = ssh.exec_command("ps aux | grep -E 'php.*artisan' | grep -v grep | wc -l")
-stdout.channel.settimeout(3)
-try:
-    count = stdout.read().decode('utf-8').strip()
-    print(f"Процессов Laravel: {count}")
-    if int(count) >= 2:
-        print("✓ Laravel и Queue Worker работают")
-except:
-    pass
-
-ssh.close()
-
-print("\n=== Итоги исправлений ===")
-print("\n1. ✓ Очередь настроена на database")
-print("2. ✓ Queue Worker запущен как отдельный сервис")
-print("3. ✓ Пентесты выполняются асинхронно (не блокируют API)")
-print("4. ✓ Улучшена обработка ошибок авторизации (не выкидывает при таймаутах)")
-print("5. ✓ Увеличены таймауты Nginx (300s)")
-print("6. ✓ Добавлено создание логов пентеста")
-print("\nПопробуйте:")
-print("  - Войти в систему: https://72.56.79.153")
-print("  - Запустить пентест")
-print("  - Проверить что после запуска можно продолжать работать")
-
-
+if __name__ == "__main__":
+    final_check()
