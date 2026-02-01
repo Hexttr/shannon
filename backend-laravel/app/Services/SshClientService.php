@@ -26,7 +26,7 @@ class SshClientService
     {
         if (!$this->ssh) {
             // Локальное выполнение команды с таймаутом
-            $output = shell_exec("timeout {$timeout} " . escapeshellarg($command) . ' 2>&1');
+            $output = shell_exec("timeout {$timeout} " . $command . ' 2>&1');
             return $output ?? '';
         }
 
@@ -34,8 +34,9 @@ class SshClientService
         $this->ssh->setTimeout($timeout);
         
         // Запускаем команду с таймаутом через timeout утилиту
-        // Используем правильное экранирование для команды
-        $commandWithTimeout = "timeout {$timeout} bash -c " . escapeshellarg($command) . " 2>&1";
+        // Не используем escapeshellarg для команды, так как она уже содержит кавычки и переменные окружения
+        // Просто оборачиваем в timeout
+        $commandWithTimeout = "timeout {$timeout} {$command} 2>&1";
         
         return $this->ssh->exec($commandWithTimeout);
     }
