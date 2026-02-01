@@ -26,7 +26,9 @@ class SshClientService
     {
         if (!$this->ssh) {
             // Локальное выполнение команды с таймаутом
-            $output = shell_exec("timeout {$timeout} " . $command . ' 2>&1');
+            // Оборачиваем команду в bash -c с одинарными кавычками для правильной обработки
+            $escapedCommand = str_replace("'", "'\\''", $command);
+            $output = shell_exec("timeout {$timeout} bash -c '{$escapedCommand}' 2>&1");
             return $output ?? '';
         }
 
@@ -34,22 +36,13 @@ class SshClientService
         $this->ssh->setTimeout($timeout);
         
         // Запускаем команду с таймаутом через timeout утилиту
-        // Важно: не используем escapeshellarg, так как команда уже содержит переменные окружения и кавычки
-        // timeout должен получить команду как есть
-        $commandWithTimeout = "timeout {$timeout} {$command} 2>&1";
+        // Важно: оборачиваем команду в bash -c с одинарными кавычками
+        // Это позволяет правильно обработать команды с пробелами, кавычками и переменными окружения
+        // Экранируем одинарные кавычки в команде: ' -> '\''
+        $escapedCommand = str_replace("'", "'\\''", $command);
+        $commandWithTimeout = "timeout {$timeout} bash -c '{$escapedCommand}' 2>&1";
         
-        $result = $this->ssh->exec($commandWithTimeout);
-        
-        // Если команда не выполнилась из-за timeout, проверяем
-        if (empty($result) && $this->ssh->getExitStatus() !== 0) {
-            // Пробуем выполнить без timeout для диагностики
-            $testResult = $this->ssh->exec($command . ' 2>&1');
-            if (!empty($testResult)) {
-                return $testResult;
-            }
-        }
-        
-        return $result;
+        return $this->ssh->exec($commandWithTimeout);
     }
 
     public function __destruct()
