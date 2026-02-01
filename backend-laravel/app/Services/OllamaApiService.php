@@ -93,23 +93,29 @@ class OllamaApiService implements AiAnalysisServiceInterface
             $results = mb_substr($results, 0, $maxResultsLength) . "\n... (результат обрезан для анализа)";
         }
 
-        return "Проанализируй результаты сканирования безопасности для {$targetUrl}.\n\n" .
+        return "Ты - эксперт по безопасности. Проанализируй результаты сканирования безопасности для {$targetUrl}.\n\n" .
             "Инструмент: {$tool}\n\n" .
-            "Результаты:\n{$results}\n\n" .
-            "Извлеки все найденные уязвимости и верни их в формате JSON:\n" .
+            "Результаты сканирования:\n{$results}\n\n" .
+            "Задача: Извлеки все найденные уязвимости безопасности и верни их ТОЛЬКО в формате JSON.\n\n" .
+            "Формат ответа (обязательно строго соблюдай):\n" .
             "{\n" .
             "  \"vulnerabilities\": [\n" .
             "    {\n" .
             "      \"title\": \"Название уязвимости\",\n" .
-            "      \"description\": \"Описание\",\n" .
+            "      \"description\": \"Подробное описание\",\n" .
             "      \"severity\": \"critical|high|medium|low\",\n" .
             "      \"cvss_score\": \"X.X\",\n" .
-            "      \"cve\": \"CVE-XXXX-XXXX\",\n" .
+            "      \"cve\": \"CVE-XXXX-XXXX или пустая строка\",\n" .
             "      \"solution\": \"Рекомендации по исправлению\"\n" .
             "    }\n" .
             "  ]\n" .
             "}\n\n" .
-            "ВАЖНО: Верни ТОЛЬКО валидный JSON без дополнительного текста.";
+            "ВАЖНО:\n" .
+            "1. Верни ТОЛЬКО валидный JSON объект\n" .
+            "2. Если уязвимостей нет, верни: {\"vulnerabilities\": []}\n" .
+            "3. НЕ добавляй никакого текста до или после JSON\n" .
+            "4. НЕ используй markdown code blocks\n" .
+            "5. Всегда возвращай массив vulnerabilities, даже если он пустой";
     }
 
     private function parseAnalysis(string $content): array
@@ -117,20 +123,64 @@ class OllamaApiService implements AiAnalysisServiceInterface
         // Извлекаем JSON из ответа (может быть обернут в markdown code blocks)
         $content = trim($content);
         
+        // Проверяем если ответ говорит что уязвимостей нет
+        $noVulnsPatterns = [
+            '/ни.*уязвимост/i',
+            '/no.*vulnerabilit/i',
+            '/уязвимост.*не.*найден/i',
+            '/vulnerabilit.*not.*found/i',
+            '/не.*обнаружен/i',
+            '/not.*detected/i',
+        ];
+        
+        foreach ($noVulnsPatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                Log::info('Ollama: Уязвимостей не обнаружено в ответе');
+                return ['vulnerabilities' => []];
+            }
+        }
+        
         // Удаляем markdown code blocks если есть
         $content = preg_replace('/```json\s*/', '', $content);
         $content = preg_replace('/```\s*/', '', $content);
         $content = trim($content);
         
-        // Ищем JSON объект
-        if (preg_match('/\{.*\}/s', $content, $matches)) {
-            $json = json_decode($matches[0], true);
-            if (json_last_error() === JSON_ERROR_NONE && isset($json['vulnerabilities'])) {
-                return $json;
+        // Ищем JSON объект - пробуем несколько вариантов
+        $jsonPatterns = [
+            '/\{[^{}]*"vulnerabilities"[^{}]*\}/s', // Простой объект с vulnerabilities
+            '/\{.*"vulnerabilities".*\}/s', // Полный объект
+            '/\{.*\}/s', // Любой JSON объект
+        ];
+        
+        foreach ($jsonPatterns as $pattern) {
+            if (preg_match($pattern, $content, $matches)) {
+                $json = json_decode($matches[0], true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    // Проверяем структуру
+                    if (isset($json['vulnerabilities']) && is_array($json['vulnerabilities'])) {
+                        return $json;
+                    }
+                    // Если есть массив уязвимостей напрямую
+                    if (isset($json[0]) && is_array($json[0]) && isset($json[0]['title'])) {
+                        return ['vulnerabilities' => $json];
+                    }
+                }
+            }
+        }
+        
+        // Пытаемся найти JSON в многострочном ответе
+        $lines = explode("\n", $content);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (strpos($line, '{') !== false && strpos($line, '}') !== false) {
+                $json = json_decode($line, true);
+                if (json_last_error() === JSON_ERROR_NONE && isset($json['vulnerabilities'])) {
+                    return $json;
+                }
             }
         }
 
-        // Если не удалось распарсить, пытаемся найти vulnerabilities напрямую
+        // Если не удалось распарсить, логируем и возвращаем пустой массив
         Log::warning('Ollama: Не удалось распарсить JSON из ответа. Ответ: ' . substr($content, 0, 500));
         return ['vulnerabilities' => []];
     }

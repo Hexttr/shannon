@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Исправление конфигурации Nginx - убираем цикл rewrite
+Обновление конфигурации Nginx для отключения кэширования index.html
 """
 
 import sys
@@ -13,8 +13,8 @@ if sys.platform == 'win32':
 
 from server_utils import ServerConnection
 
-def fix_nginx():
-    """Исправляет конфигурацию Nginx"""
+def update_nginx():
+    """Обновляет конфигурацию Nginx"""
     conn = ServerConnection()
     if not conn.connect():
         print("❌ Не удалось подключиться к серверу")
@@ -22,10 +22,9 @@ def fix_nginx():
     
     try:
         print("="*60)
-        print("🔧 Исправление конфигурации Nginx...")
+        print("🔧 Обновление конфигурации Nginx...")
         print("="*60)
         
-        # Создаем исправленную конфигурацию
         nginx_config = """server {
     listen 80;
     listen [::]:80;
@@ -49,10 +48,25 @@ server {
     root /root/shannon/template/dist;
     index index.html;
 
+    # Отключаем кэширование для index.html
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate";
+        add_header Pragma "no-cache";
+        add_header Expires "0";
+        try_files $uri =404;
+    }
+
+    # Кэшируем статические файлы (JS, CSS)
+    location ~* \\.(js|css)$ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # Основной location для SPA
     location / {
         try_files $uri $uri/ /index.html;
     }
 
+    # API проксирование к Laravel backend
     location /api {
         proxy_pass http://127.0.0.1:8000/api;
         proxy_set_header Host $host;
@@ -66,6 +80,7 @@ server {
         proxy_send_timeout 300s;
     }
 
+    # Health check
     location /up {
         proxy_pass http://127.0.0.1:8000/up;
         proxy_set_header Host $host;
@@ -74,32 +89,32 @@ server {
 """
         
         # Сохраняем конфигурацию
-        conn.execute(f'cat > /tmp/nginx_shannon.conf << \'NGINX_EOF\'\n{nginx_config}\nNGINX_EOF')
-        
-        # Копируем в sites-available
-        conn.execute('cp /tmp/nginx_shannon.conf /etc/nginx/sites-available/shannon')
+        conn.execute(f'cat > /tmp/nginx_shannon_new.conf << \'NGINX_EOF\'\n{nginx_config}\nNGINX_EOF')
+        conn.execute('cp /tmp/nginx_shannon_new.conf /etc/nginx/sites-available/shannon')
         
         # Проверяем конфигурацию
         print("\nПроверка конфигурации...")
         output, error, code = conn.execute('nginx -t')
         print(output)
-        if error:
-            print(f"Errors: {error}")
         
         if code == 0:
             print("✅ Конфигурация валидна")
             # Перезагружаем Nginx
-            output, _, _ = conn.execute('systemctl reload nginx')
+            conn.execute('systemctl reload nginx')
             print("✅ Nginx перезагружен")
-            
-            # Проверяем статус
-            output, _, _ = conn.execute('systemctl status nginx --no-pager | head -5')
-            print(f"\nСтатус Nginx:\n{output}")
-            
-            return True
         else:
-            print("❌ Ошибка в конфигурации")
+            print(f"❌ Ошибка в конфигурации: {error}")
             return False
+        
+        print("\n" + "="*60)
+        print("✅ Конфигурация Nginx обновлена!")
+        print("="*60)
+        print("\n💡 Теперь:")
+        print("   - index.html не будет кэшироваться")
+        print("   - JS/CSS файлы будут кэшироваться")
+        print("   - Обновите страницу в браузере (Ctrl+F5)")
+        
+        return True
         
     except Exception as e:
         print(f"\n❌ Ошибка: {e}")
@@ -110,5 +125,5 @@ server {
         conn.close()
 
 if __name__ == "__main__":
-    success = fix_nginx()
-    sys.exit(0 if success else 1)
+    update_nginx()
+

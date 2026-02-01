@@ -1,74 +1,98 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Пересборка frontend с логированием
+Пересборка frontend с логированием для отладки
 """
 
-import paramiko
 import sys
-import time
+import os
 
 if sys.platform == 'win32':
-    import codecs
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    os.system('chcp 65001 >nul')
+    sys.stdout.reconfigure(encoding='utf-8')
 
-SSH_HOST = "72.56.79.153"
-SSH_USER = "root"
-SSH_PASSWORD = "m8J@2_6whwza6U"
-FRONTEND_DIR = "/root/shannon/template"
+from server_utils import ServerConnection
 
-def ssh_exec(ssh, command):
-    stdin, stdout, stderr = ssh.exec_command(command)
-    exit_status = stdout.channel.recv_exit_status()
-    output = stdout.read().decode('utf-8', errors='replace')
-    error = stderr.read().decode('utf-8', errors='replace')
-    return exit_status == 0, output, error
-
-def main():
-    print("="*60)
-    print("ПЕРЕСБОРКА FRONTEND С ЛОГИРОВАНИЕМ")
-    print("="*60)
-    
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(SSH_HOST, username=SSH_USER, password=SSH_PASSWORD, timeout=30)
+def rebuild_with_logging():
+    """Пересобирает frontend с логированием"""
+    conn = ServerConnection()
+    if not conn.connect():
+        print("❌ Не удалось подключиться к серверу")
+        return False
     
     try:
-        # 1. Обновление репозитория
-        print("\n1. ОБНОВЛЕНИЕ РЕПОЗИТОРИЯ:")
-        ssh_exec(ssh, "cd /root/shannon && git pull")
-        print("  [OK] Репозиторий обновлен")
+        print("="*60)
+        print("🔨 Пересборка frontend с логированием...")
+        print("="*60)
         
-        # 2. Пересборка
-        print("\n2. ПЕРЕСБОРКА FRONTEND:")
-        print("  Это может занять несколько минут...")
-        success, output, error = ssh_exec(ssh, f"cd {FRONTEND_DIR} && /usr/bin/npm run build 2>&1")
-        if "built in" in output.lower() or "dist" in output.lower():
-            print("  [OK] Frontend пересобран")
-            print(f"  {output[-200:]}")
+        # Копируем исправленный api.ts на сервер
+        print("\n1. Копирование исправленного api.ts...")
+        with open('template/src/services/api.ts', 'r', encoding='utf-8') as f:
+            api_content = f.read()
+        
+        conn.execute(f'cat > /tmp/api.ts << \'API_EOF\'\n{api_content}\nAPI_EOF')
+        conn.execute('cp /tmp/api.ts /root/shannon/template/src/services/api.ts')
+        print("   ✅ api.ts обновлен")
+        
+        # Пересобираем frontend
+        print("\n2. Пересборка frontend...")
+        output, error, code = conn.execute('cd /root/shannon/template && npm run build 2>&1')
+        print(output[-500:] if len(output) > 500 else output)
+        
+        if code == 0:
+            print("   ✅ Frontend успешно собран")
         else:
-            print(f"  [WARNING] Вывод: {output[-500:]}")
+            print(f"   ❌ Ошибка сборки: {error}")
+            return False
         
-        # 3. Перезагрузка Nginx
-        print("\n3. ПЕРЕЗАГРУЗКА NGINX:")
-        ssh_exec(ssh, "systemctl reload nginx")
-        time.sleep(2)
+        # Проверяем новый файл
+        print("\n3. Проверка нового файла...")
+        output, _, _ = conn.execute('ls -lh /root/shannon/template/dist/assets/index-*.js | tail -1')
+        latest_file = output.split()[-1] if output else None
+        if latest_file:
+            print(f"   Новый файл: {latest_file}")
+            
+            # Проверяем что старый URL не используется
+            output, _, _ = conn.execute(f'grep -o "72.56.79.153:8000" {latest_file} | head -1')
+            if output:
+                print("   ⚠️  ВНИМАНИЕ: Старый URL все еще найден в файле!")
+            else:
+                print("   ✅ Старый URL не найден")
+            
+            # Проверяем что новый URL используется
+            output, _, _ = conn.execute(f'grep -o "location.protocol" {latest_file} | head -1')
+            if output:
+                print("   ✅ Используется location.protocol")
+            else:
+                print("   ⚠️  location.protocol не найден")
+        
+        # Обновляем index.html
+        print("\n4. Проверка index.html...")
+        output, _, _ = conn.execute('cat /root/shannon/template/dist/index.html')
+        if latest_file and latest_file.split('/')[-1] in output:
+            print("   ✅ index.html ссылается на новый файл")
+        else:
+            print("   ⚠️  index.html может ссылаться на старый файл")
         
         print("\n" + "="*60)
-        print("ГОТОВО!")
+        print("✅ Frontend пересобран!")
         print("="*60)
-        print(f"\nПопробуйте войти снова:")
-        print(f"  URL: https://{SSH_HOST}")
-        print(f"  Логин: admin")
-        print(f"  Пароль: admin")
-        print(f"\nОткройте консоль браузера (F12) и проверьте логи.")
-        print(f"Вы увидите детальную информацию о процессе входа.")
+        print("\n💡 Инструкции:")
+        print("   1. Очистите кэш браузера полностью (Ctrl+Shift+Delete)")
+        print("   2. Или используйте режим инкогнито")
+        print("   3. Откройте консоль браузера (F12)")
+        print("   4. Проверьте логи с префиксом [API]")
+        print("   5. Должно быть: API_URL: https://72.56.79.153/api")
         
+        return True
+        
+    except Exception as e:
+        print(f"\n❌ Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
     finally:
-        ssh.close()
+        conn.close()
 
 if __name__ == "__main__":
-    main()
-
-
-
+    rebuild_with_logging()

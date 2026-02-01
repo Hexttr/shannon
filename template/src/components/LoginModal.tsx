@@ -28,7 +28,28 @@ const LoginModal = ({ isOpen, onClose, onSuccess }: LoginModalProps) => {
       onSuccess?.();
       // Не закрываем модалку здесь - она закроется автоматически после успешного входа
     } catch (err: any) {
-      setError(err.message || 'Ошибка при входе. Проверьте username и password.');
+      console.error('[LoginModal] Ошибка входа:', err);
+      
+      // Обработка различных типов ошибок
+      let errorMessage = 'Ошибка при входе. Проверьте username и password.';
+      
+      if (err.isNetworkError || !err.response) {
+        // Сетевая ошибка
+        errorMessage = 'Не удалось подключиться к серверу. Проверьте подключение к интернету или попробуйте позже.';
+      } else if (err.response?.status === 401) {
+        // Неверные учетные данные
+        errorMessage = err.response?.data?.message || 'Неверные username или password.';
+      } else if (err.response?.status >= 500) {
+        // Ошибка сервера
+        errorMessage = 'Ошибка сервера. Попробуйте позже.';
+      } else if (err.response?.data?.message) {
+        // Сообщение от сервера
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
