@@ -35,7 +35,7 @@ class OllamaApiService implements AiAnalysisServiceInterface
                     'stream' => false,
                     'options' => [
                         'temperature' => 0.3, // Низкая температура для более точного анализа
-                        'num_predict' => 4096, // Максимальное количество токенов
+                        'num_predict' => 8192, // Увеличено до 8k токенов для более детального анализа
                     ],
                 ]);
 
@@ -71,7 +71,7 @@ class OllamaApiService implements AiAnalysisServiceInterface
                     'stream' => false,
                     'options' => [
                         'temperature' => 0.3,
-                        'num_predict' => 4096,
+                        'num_predict' => 8192, // Увеличено для более детального анализа
                     ],
                 ]);
 
@@ -88,9 +88,12 @@ class OllamaApiService implements AiAnalysisServiceInterface
     private function buildPrompt(string $tool, string $results, string $targetUrl): string
     {
         // Обрезаем результаты если они слишком длинные (Ollama имеет ограничения)
-        $maxResultsLength = 10000; // Ограничиваем до 10k символов
+        // Увеличено до 50k для более глубокого анализа (llama3.2:3b имеет ~8k токенов контекста)
+        // Это примерно 20-30k символов, но оставляем запас для промпта
+        $maxResultsLength = 50000; // Увеличено до 50k символов для более полного анализа
         if (mb_strlen($results) > $maxResultsLength) {
-            $results = mb_substr($results, 0, $maxResultsLength) . "\n... (результат обрезан для анализа)";
+            // Обрезаем с конца, оставляя начало (там обычно важная информация)
+            $results = mb_substr($results, 0, $maxResultsLength) . "\n... (результат обрезан для анализа, показаны первые " . number_format($maxResultsLength) . " символов)";
         }
 
         return "Ты - эксперт по безопасности. Проанализируй результаты сканирования безопасности для {$targetUrl}.\n\n" .
