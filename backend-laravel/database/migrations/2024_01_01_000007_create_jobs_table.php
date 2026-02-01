@@ -32,7 +32,7 @@ return new class extends Migration
         });
 
         Schema::create('failed_jobs', function (Blueprint $table) {
-            $table->string('id')->primary();
+            $table->id(); // Используем auto-increment ID вместо string
             $table->string('uuid')->unique();
             $table->text('connection');
             $table->text('queue');

@@ -1,5 +1,5 @@
 import api from './api';
-import type { Service, CreateServiceRequest } from '../types';
+import type { Service, CreateServiceRequest, UpdateServiceRequest } from '../types';
 
 export const serviceApi = {
   getAll: async () => {
@@ -10,6 +10,11 @@ export const serviceApi = {
 
   create: async (data: CreateServiceRequest) => {
     const response = await api.post<{ data: Service }>('/services', data);
+    return { ...response, data: response.data.data };
+  },
+
+  update: async (id: string, data: UpdateServiceRequest) => {
+    const response = await api.put<{ data: Service }>(`/services/${id}`, data);
     return { ...response, data: response.data.data };
   },
 

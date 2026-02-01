@@ -52,6 +52,11 @@ export interface CreateServiceRequest {
   url: string;
 }
 
+export interface UpdateServiceRequest {
+  name: string;
+  url: string;
+}
+
 export interface CreatePentestRequest {
   name: string;
   config: {
