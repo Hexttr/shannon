@@ -57,3 +57,4 @@ php artisan route:list
 3. Проверить права доступа: `chmod -R 775 storage bootstrap/cache`
 4. Очистить кэш: `php artisan optimize:clear`
 
+

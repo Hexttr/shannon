@@ -34,16 +34,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.__DEBUG__?.log('[AuthContext] Токен валиден, пользователь:', response.data);
         setUser(response.data);
       } catch (error: any) {
-        window.__DEBUG__?.log('[AuthContext] Токен невалиден:', error.response?.status, error.response?.data);
-        // Токен невалиден, очищаем
+        window.__DEBUG__?.log('[AuthContext] Токен невалиден или ошибка API:', error.response?.status, error.response?.data);
+        // Токен невалиден или ошибка API, очищаем
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
         setUser(null);
+      } finally {
+        // Всегда устанавливаем isLoading в false, даже при ошибке
+        setIsLoading(false);
       }
     } else {
       window.__DEBUG__?.log('[AuthContext] Токен не найден, устанавливаем isLoading=false');
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const login = async (username: string, password: string) => {

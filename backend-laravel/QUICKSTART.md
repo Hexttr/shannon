@@ -171,3 +171,4 @@ chmod -R 775 storage bootstrap/cache
 
 См. `DEPLOYMENT.md` для детальных инструкций по production развертыванию.
 
+

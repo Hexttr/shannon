@@ -4,12 +4,13 @@ import type { Service, CreateServiceRequest } from '../types';
 export const serviceApi = {
   getAll: async () => {
     const response = await api.get<{ data: Service[] }>('/services');
-    return response;
+    // Laravel возвращает { data: [...] }, поэтому возвращаем response.data.data
+    return { ...response, data: response.data.data };
   },
 
   create: async (data: CreateServiceRequest) => {
     const response = await api.post<{ data: Service }>('/services', data);
-    return response;
+    return { ...response, data: response.data.data };
   },
 
   delete: async (id: string) => {

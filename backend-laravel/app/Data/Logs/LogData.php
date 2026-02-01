@@ -16,3 +16,4 @@ class LogData extends Data
     }
 }
 
+

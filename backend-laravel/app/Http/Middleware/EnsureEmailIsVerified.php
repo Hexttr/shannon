@@ -26,3 +26,4 @@ class EnsureEmailIsVerified extends Middleware
     }
 }
 
+

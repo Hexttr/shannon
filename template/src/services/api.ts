@@ -1,6 +1,22 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Автоматически определяем API URL на основе текущего протокола
+const getApiUrl = () => {
+  // Если указана переменная окружения - используем её
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // В production используем тот же протокол и хост, что и текущая страница
+  if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `${window.location.protocol}//${window.location.host}/api`;
+  }
+  
+  // В development используем localhost
+  return 'http://localhost:8000/api';
+};
+
+const API_URL = getApiUrl();
 
 const api = axios.create({
   baseURL: API_URL,

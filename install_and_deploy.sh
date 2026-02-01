@@ -112,3 +112,4 @@ echo "  cd $BACKEND_DIR"
 echo "  php artisan tinker"
 echo "  \\App\\Models\\User::create(['id' => \\Illuminate\\Support\\Str::uuid(), 'username' => 'admin', 'email' => 'admin@test.com', 'password' => \\Illuminate\\Support\\Facades\\Hash::make('admin')]);"
 
+

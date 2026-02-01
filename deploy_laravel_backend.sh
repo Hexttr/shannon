@@ -60,3 +60,4 @@ echo "2. Создайте пользователя: php artisan tinker"
 echo "3. Настройте systemd service для автозапуска"
 echo "4. Настройте Nginx для проксирования запросов"
 
+

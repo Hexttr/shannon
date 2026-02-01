@@ -170,3 +170,4 @@ php artisan test
 - [Spatie Laravel Data](https://github.com/spatie/laravel-data)
 - [Laravel Documentation](https://laravel.com/docs)
 
+
